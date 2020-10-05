@@ -1,3 +1,5 @@
+from cache.States import States
+
 
 class CacheBlock:
 
@@ -7,3 +9,5 @@ class CacheBlock:
         self.data = hex(0)
         self.LRU = 0
         self.blockNumber = number
+        self.state = States.INVALID
+        

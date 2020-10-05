@@ -1,4 +1,4 @@
-from mainmem import MemBlock as mblock
+from mainmem.MemBlock import MemBlock
 
 
 class MainMemory:
@@ -12,8 +12,11 @@ class MainMemory:
         self.memBlocks = []
 
         for i in range(blockQty):
-            self.memBlocks.append(mblock.MemBlock(format(i, 'b')))
+            self.memBlocks.append(MemBlock(format(i, 'b')))
 
-    def print(self):
-        for i in range(len(self.memBlocks)):
-            print(self.memBlocks[i].addr)
+    def getAvailableAddresses(self):
+        '''
+        Obtains the memory addresses of the blocks
+        :return: list of addresses of main memory
+        '''
+        return [i.addr for i in self.memBlocks]
