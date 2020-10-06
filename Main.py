@@ -8,6 +8,11 @@ import threading
 mainMem = MainMemory(16)
 bus = Bus([], mainMem)
 proc1 = Processor(1, mainMem.getAvailableAddresses())
+
+t1 = threading.Thread(target=proc1.startProcessor, args=(bus,))
+t1.start()
+
+'''
 proc2 = Processor(2, mainMem.getAvailableAddresses())
 proc3 = Processor(3, mainMem.getAvailableAddresses())
 
@@ -18,6 +23,7 @@ t3 = threading.Thread(target=proc3.startProcessor, args=(bus,))
 t1.start()
 t2.start()
 t3.start()
+'''
 
 #gui = GUI.GUI()
 

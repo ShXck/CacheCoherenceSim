@@ -17,14 +17,12 @@ class CacheController:
         self.indexLen = int(math.log2(self.setsQty))
         self.tagLen = int(addrLen - self.offsetLen - self.indexLen)
 
-    def GetParams(self):
-        '''
-        Obtains cache parameters
-        :return: tuple with offset length, number of sets, index length and tag length.
-        '''
-        return self.offsetLen, self.setsQty, self.indexLen, self.tagLen
+    def mapAddress(self, addr, data):
+        tag, index, offset = self.processAddress(addr)
 
-    def ProcessAddress(self, memAddr):
+        cacheBlock = addr % 2
+
+    def processAddress(self, memAddr):
         '''
         Decompose the main memory address into tag, set  index and offset
         :param memAddr: main memory address

@@ -1,4 +1,4 @@
-from cache.States import States
+from cache.Enums import BlockStates
 
 
 class CacheBlock:
@@ -9,5 +9,8 @@ class CacheBlock:
         self.data = hex(0)
         self.LRU = 0
         self.blockNumber = number
-        self.state = States.INVALID
-        
+        self.state = BlockStates.INVALID
+
+    def __str__(self):
+        return str(self.validBit) + "|" + str(self.currentTag) + "|" + str(self.data) + "|" + str(self.blockNumber) + "|" + \
+               str(self.state)

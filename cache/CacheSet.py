@@ -12,4 +12,14 @@ class CacheSet:
             self.blocks.append(block.CacheBlock(blockId))
             blockId += 1
 
+    def getBlockValue(self, tag):
+        '''
+        Retrieves the data value of a block, given the tag.
+        :param tag: tag of the block.
+        :return: data value.
+        '''
+        for block in self.blocks:
+            if block.currentTag == tag:
+                return block.data
+
 

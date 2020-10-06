@@ -14,6 +14,9 @@ class MainMemory:
         for i in range(blockQty):
             self.memBlocks.append(MemBlock(format(i, 'b')))
 
+        for i in self.memBlocks:
+            print(i)
+
     def getAvailableAddresses(self):
         '''
         Obtains the memory addresses of the blocks
