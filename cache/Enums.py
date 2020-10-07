@@ -13,3 +13,8 @@ class Instructions(enum.Enum):
     CALC = "CALC"
     READ = "READ"
     WRITE = "WRITE"
+
+
+class TransactionState(enum.Enum):
+    UNRESOLVED = 0
+    RESOLVED = 1

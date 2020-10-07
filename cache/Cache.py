@@ -21,26 +21,28 @@ class L1Cache:
         '''
         tag, index, offset = self.controller.processAddress(memAddr)
 
-        if self.isInCache(tag):
-            blockData = self.sets[index].getBlockValue(tag)
-            print("Block is valid -> Data: ", blockData)
+        ret, block = self.isInCache(tag)
+
+        if ret and block.state != BlockStates.INVALID:
+            print("Block is valid -> Data: ", block.data)
             return True
         else:
             return False
 
     def writeValue(self, memAddr, writeVal):
-        procAddr = self.controller.processAddress(memAddr)
+        tag, index, offset = self.controller.processAddress(memAddr)
+
 
     def isInCache(self, tag):
         '''
         Checks if a memory Address has already been mapped to cache.
         :param tag: tag of address
-        :return: wether or not is in cache.
+        :return: wether or not is in cache and the block data in case the block was found.
         '''
 
         for set in self.sets:
             for block in set.blocks:
                 if block.currentTag == tag and block.state != BlockStates.INVALID:
-                    return True
+                    return True, block
 
-        return False
+        return False, None

@@ -17,10 +17,13 @@ class CacheController:
         self.indexLen = int(math.log2(self.setsQty))
         self.tagLen = int(addrLen - self.offsetLen - self.indexLen)
 
-    def mapAddress(self, addr, data):
+    def mapAddress(self, addr):
         tag, index, offset = self.processAddress(addr)
 
-        cacheBlock = addr % 2
+        cacheBlock = int(addr, 2) % 2
+
+        # TODO: Bug here for short memory addresses
+        return cacheBlock, tag, int(index)
 
     def processAddress(self, memAddr):
         '''
