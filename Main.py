@@ -12,7 +12,7 @@ proc1 = Processor(1, mainMem.getAvailableAddresses(), lock)
 proc2 = Processor(2, mainMem.getAvailableAddresses(), lock)
 proc3 = Processor(3, mainMem.getAvailableAddresses(), lock)
 
-bus = Bus([proc1, proc2], mainMem)
+bus = Bus([proc1, proc2, proc3], mainMem)
 
 t1 = threading.Thread(target=proc1.startProcessor, args=(bus,))
 t2 = threading.Thread(target=proc2.startProcessor, args=(bus,))

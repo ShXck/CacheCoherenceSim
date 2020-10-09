@@ -23,3 +23,13 @@ class CacheSet:
                 return block.data
 
 
+    def getReplacementBlock(self):
+        '''
+        Checks which is the block least recently used to be replaced.
+        :return: the block to be replaced.
+        '''
+        for block in self.blocks:
+            if block.LRU == 1:
+                return block
+
+

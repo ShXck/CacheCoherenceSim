@@ -18,3 +18,10 @@ class Instructions(enum.Enum):
 class TransactionState(enum.Enum):
     UNRESOLVED = 0
     RESOLVED = 1
+
+
+class TransactionType(enum.Enum):
+    NO_TRANS = 0
+    READ_MISS = 1
+    INVALIDATE = 2
+    WRITE_MISS = 3

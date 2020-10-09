@@ -18,12 +18,10 @@ class CacheController:
         self.tagLen = int(addrLen - self.offsetLen - self.indexLen)
 
     def mapAddress(self, addr):
-        tag, index, offset = self.processAddress(addr)
-
-        cacheBlock = int(addr, 2) % 2
+        setIndex = int(addr) % 2
 
         # TODO: Bug here for short memory addresses
-        return cacheBlock, tag, int(index)
+        return setIndex
 
     def processAddress(self, memAddr):
         '''
@@ -31,7 +29,7 @@ class CacheController:
         :param memAddr: main memory address
         :return: tuple with tag, index and offset
         '''
-        tag = memAddr[0:self.tagLen]
+        tag = memAddr
         index = memAddr[self.tagLen:self.tagLen + self.indexLen]
         offset = memAddr[self.tagLen + self.indexLen: self.tagLen + self.indexLen + self.offsetLen]
         return tag, index, offset
