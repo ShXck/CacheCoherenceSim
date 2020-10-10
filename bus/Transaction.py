@@ -1,15 +1,16 @@
 
 class BusTransaction:
 
-    def __init__(self, senderID, addr, type):
+    def __init__(self, senderID, addr, type, writeVal=None):
         self.sender = senderID
         self.addr = addr
         self.transType = type
-        self.accessCount = 0
+        self.writeValue = writeVal
+        self.accessed = []
 
 
     def __str__(self):
-        return "P" + str(self.sender) + "|" + self.addr + "|" + str(self.transType)
+        return "P" + str(self.sender) + "|" + self.addr + "|" + str(self.transType) + "|" + str(len(self.accessed))
 
     def __eq__(self, other):
         if not isinstance(other, BusTransaction):

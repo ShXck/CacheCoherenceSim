@@ -5,7 +5,7 @@ class BlockStates(enum.Enum):
     MODIFIED = 0
     SHARED = 1
     INVALID = 2
-    OWNER = 3
+    OWNED = 3
     EXCLUSIVE = 4
 
 

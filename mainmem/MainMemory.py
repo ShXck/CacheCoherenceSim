@@ -14,6 +14,20 @@ class MainMemory:
         for i in range(blockQty):
             self.memBlocks.append(MemBlock(format(i, 'b')))
 
+    def updateMemoryBlock(self, addr, value):
+        '''
+        Update a memory block.
+        :param addr: address of block.
+        :param value: new data for the block.
+        :return: exception if address does not exists.
+        '''
+        for block in self.memBlocks:
+            if block.addr == addr:
+                block.data = value
+                return
+
+        raise Exception("Memory Address does not match with any block.")
+
     def getAvailableAddresses(self):
         '''
         Obtains the memory addresses of the blocks
