@@ -29,7 +29,6 @@ class CacheController:
         :param memAddr: main memory address
         :return: tuple with tag, index and offset
         '''
-        # TODO: fill with 0 when addr is not 4 bits.
         tag = memAddr
         index = memAddr[self.tagLen:self.tagLen + self.indexLen]
         offset = memAddr[self.tagLen + self.indexLen: self.tagLen + self.indexLen + self.offsetLen]

@@ -10,6 +10,16 @@ class TransactionResponse:
         self.fromMemory = None
         self.read = False
 
+    def updateResponse(self, data, fromMem):
+        '''
+        Updates values and state of the transaction response
+        :param data: data of the response.
+        :param fromMem: whether or not value came from memory.
+        '''
+        self.data = data
+        self.fromMemory = fromMem
+        self.state = TransactionState.RESOLVED
+
     def __str__(self):
         return self.addr + "|" + str(self.data) + "|" + str(self.state) + "|" + str(self.fromMemory)
 

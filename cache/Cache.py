@@ -1,3 +1,4 @@
+from bus.Transaction import BusTransaction
 from cache.CacheController import CacheController
 from cache.CacheSet import CacheSet
 from cache.Enums import BlockStates, TransactionType
@@ -23,7 +24,7 @@ class L1Cache:
 
         found, block = self.getCacheBlock(tag)
 
-        if found and block.state != BlockStates.INVALID:
+        if found and block.state.value != BlockStates.INVALID.value:
             print("Block is valid -> Data: ", block.data)
             # Marks the block read as recently used.
             block.LRU = 0
@@ -33,29 +34,6 @@ class L1Cache:
         else:
             return False
 
-    def setBlockData(self, addr, writeVal, fromMem):
-        '''
-        Updates data of block, although it assumes the block is valid and updated.
-        :param addr: address of block.
-        :param writeVal: new value.
-        :return:
-        '''
-        index = self.controller.mapAddress(addr)
-
-        for block in self.sets[index].blocks:
-            if block.currentTag == addr:
-                # updates block data
-                block.data = writeVal
-                # Change the LRU value of the blocks
-                block.LRU = 0
-                self.sets[index].blocks[not block.blockNumber].LRU = 1
-
-                if block.state.value == BlockStates.SHARED:
-                    block.state = BlockStates.MODIFIED
-                    return True
-                else:
-                    return False
-
     def updateBlock(self, trans, transResp, bus):
         '''
         Updates all the information of a block.
@@ -63,34 +41,37 @@ class L1Cache:
         '''
         # Check if block addr is already in cache
         inCache, blockCache = self.getCacheBlock(transResp.addr)
+        # gets index of block
+        setIndex = self.controller.mapAddress(transResp.addr)
 
         if not inCache:
-            # Map new block to cache
-            setIndex = self.controller.mapAddress(transResp.addr)
             blockCache = self.sets[setIndex].getReplacementBlock()
-            # Set the other block as the least recently used.
-            self.sets[setIndex].blocks[not blockCache.blockNumber].LRU = 1
 
             # if the block being replaced contains valid data, update the block to memory
-            if blockCache.state != BlockStates.INVALID:
-                # TODO: CHECK IF THIS IS BEING DONE
+            if blockCache.state.value == BlockStates.MODIFIED.value or blockCache.state.value == BlockStates.OWNED.value:
                 print("Writing back to memory")
-                bus.writeToMemory(transResp.addr, transResp.data)
+                bus.writeToMemory(blockCache.currentTag, blockCache.data)
 
         # Update block's data
         blockCache.data = transResp.data
         blockCache.currentTag = transResp.addr
         blockCache.LRU = 0
+        # Set the other block as the least recently used.
+        self.sets[setIndex].blocks[not blockCache.blockNumber].LRU = 1
 
-        blockCache.changeStateByTransaction(trans.transType, transResp.fromMem)
+        if trans.transType.value == TransactionType.READ_MISS.value:
+            if transResp.fromMemory:
+                blockCache.state = BlockStates.EXCLUSIVE
+            else:
+                blockCache.state = BlockStates.SHARED
 
-        # Checks if the response came from main memory
-        if transResp.fromMem:
-            blockCache.state = BlockStates.EXCLUSIVE
-        # Response came from other cache, so it is modified and other caches must be invalidated.
-        else:
-            # TODO: create a transaction for invalidation to other caches.
+        elif trans.transType.value == TransactionType.WRITE_MISS.value:
+            blockCache.data = trans.writeValue
             blockCache.state = BlockStates.MODIFIED
+            busTrans = BusTransaction(trans.sender, trans.addr, TransactionType.INVALIDATE)
+            return busTrans
+
+        return None
 
     def writeValue(self, memAddr, writeVal):
         '''
@@ -109,16 +90,28 @@ class L1Cache:
                 print("Writing to exclusive block at " + addr)
                 # if block is exclusive no need to invalidate the other caches, just write the value
                 block.data = hex(int(writeVal, 16))
+                block.state = BlockStates.MODIFIED
+                block.dirty = True
                 return False, TransactionType.NO_TRANS
-            elif block.state.value == BlockStates.SHARED:
+            # Checks if the block is shared. If so, invalidate other caches.
+            elif block.state.value == BlockStates.SHARED.value or block.state.value == BlockStates.OWNED.value:
                 print("Invalidate other caches at " + addr)
                 # Generate transaction to invalidate other caches
                 block.data = hex(int(writeVal, 16))
                 block.state = BlockStates.MODIFIED
                 return True, TransactionType.INVALIDATE
+            else:
+                # block was found but it has and invalid data.
+                return True, TransactionType.WRITE_MISS
         else:
             # Block is not in this cache, write miss is produced
             return True, TransactionType.WRITE_MISS
+
+    def changeLRUstate(self, block):
+        setIndex = self.controller.mapAddress(block.currentTag)
+        block.LRU = 0
+        self.sets[setIndex].blocks[not block.blockNumber].LRU = 1
+
 
     def getCacheBlock(self, tag):
         '''
@@ -129,7 +122,7 @@ class L1Cache:
 
         for set in self.sets:
             for block in set.blocks:
-                if block.currentTag == tag and block.state != BlockStates.INVALID:
+                if block.currentTag == tag:
                     return True, block
 
         return False, None

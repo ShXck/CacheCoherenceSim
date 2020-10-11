@@ -9,6 +9,7 @@ class CacheBlock:
         self.LRU = 1
         self.blockNumber = number
         self.state = BlockStates.INVALID
+        self.dirty = False
 
     def changeStateByTransaction(self, transType, fromMem):
 
