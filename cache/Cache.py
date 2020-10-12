@@ -68,10 +68,6 @@ class L1Cache:
         elif trans.transType.value == TransactionType.WRITE_MISS.value:
             blockCache.data = trans.writeValue
             blockCache.state = BlockStates.MODIFIED
-            busTrans = BusTransaction(trans.sender, trans.addr, TransactionType.INVALIDATE)
-            return busTrans
-
-        return None
 
     def writeValue(self, memAddr, writeVal):
         '''
