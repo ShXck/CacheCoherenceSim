@@ -6,6 +6,7 @@ import threading
 
 
 mainMem = MainMemory(16)
+'''
 mainMem.print()
 lock = threading.Lock()
 proc1 = Processor(1, mainMem.getAvailableAddresses(), lock)
@@ -21,7 +22,7 @@ t1.start()
 t2.start()
 t3.start()
 
-'''
+
 proc2 = Processor(2, mainMem.getAvailableAddresses())
 
 t1 = threading.Thread(target=proc1.startProcessor, args=(bus,))
@@ -33,6 +34,6 @@ t2.start()
 t3.start()
 '''
 
-#gui = GUI.GUI()
+gui = GUI.GUI()
 
-#gui.startGUI(mainMem.memBlocks)
+gui.startGUI(mainMem.memBlocks)
