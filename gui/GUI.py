@@ -7,51 +7,66 @@ red = (255, 0, 0)
 lightOrange = (229, 126, 57)
 black = (0, 0, 0)
 
+
 class GUI:
 
     def __init__(self):
         pygame.init()
+        pygame.font.init()
+
         self.gameWindow = pygame.display.set_mode((1280, 680))
         pygame.display.set_caption("Cache Coherence Simulation Software")
         self.clock = pygame.time.Clock()
 
+        # Strings of the values in main memory
         self.memBlocksTexts = []
-        self.p1CacheBlocksText = []
-        self.p2CacheBlocksText = []
-        self.p3CacheBlocksText = []
-        self.p4CacheBlocksText = []
+        # Strings of data in the four blocks of cache
+        self.p1CacheValuesText = ["0x0", "0x0", "0x0", "0x0"]
+        self.p2CacheValuesText = ["0x0", "0x0", "0x0", "0x0"]
+        self.p3CacheValuesText = ["0x0", "0x0", "0x0", "0x0"]
+        self.p4CacheValuesText = ["0x0", "0x0", "0x0", "0x0"]
 
-        self.p1CacheStatesText = []
-        self.p2CacheStatesText = []
-        self.p3CacheStatesText = []
-        self.p4CacheStatesText = []
+        # Strings of the states of the blocks
+        self.p1CacheStatesText = ["I", "I", "I", "I"]
+        self.p2CacheStatesText = ["I", "I", "I", "I"]
+        self.p3CacheStatesText = ["I", "I", "I", "I"]
+        self.p4CacheStatesText = ["I", "I", "I", "I"]
 
-        self.p1CacheAddrText = []
-        self.p2CacheAddrText = []
-        self.p3CacheAddrText = []
-        self.p4CacheAddrText = []
+        # Strings of the addresses of the block
+        self.p1CacheAddrText = ["0x", "0x", "0x", "0x"]
+        self.p2CacheAddrText = ["0x", "0x", "0x", "0x"]
+        self.p3CacheAddrText = ["0x", "0x", "0x", "0x"]
+        self.p4CacheAddrText = ["0x", "0x", "0x", "0x"]
 
-        self.p1LastInstr = None
-        self.p1GenInstr = None
-        self.p2LastInstr = None
-        self.p2GenInstr = None
-        self.p3LastInstr = None
-        self.p3GenInstr = None
-        self.p4LastInstr = None
-        self.p4GenInstr = None
+        self.p1LastInstr = "Test"
+        self.p1GenInstr = "Test"
+        self.p2LastInstr = "Test"
+        self.p2GenInstr = "Test"
+        self.p3LastInstr = "Test"
+        self.p3GenInstr = "Test"
+        self.p4LastInstr = "Test"
+        self.p4GenInstr = "Test"
+
+        self.consolas = pygame.font.SysFont('consolas', 20)
+        self.customFont = pygame.font.Font('C:\\Users\\DELL\\Desktop\\Proyecto1-Arqui\\gui\\fonts\\BebasNeue.ttf', 32)
+
+    def setMemInitialValues(self, memblocks):
+        for i in memblocks:
+            self.memBlocksTexts.append(i.data)
 
 
-
-    def startGUI(self, memBlocks):
-
-        self.drawMainMemBlocks(16)
-        self.drawBusComms()
-        self.drawStaticText(memBlocks)
-        self.drawCacheBlocks(4)
-        self.drawMemBlockDataText(memBlocks)
-        self.drawInstrText()
+    def startGUI(self):
 
         while True:
+            self.gameWindow.fill(black)
+
+            self.drawMainMemBlocks(16)
+            self.drawBusComms()
+            self.drawStaticText()
+            self.drawCacheBlocks(4)
+            self.drawMemBlockDataText()
+            self.drawLastInstrText()
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -60,113 +75,92 @@ class GUI:
             pygame.display.update()
             self.clock.tick(30)
 
+    def drawLastInstrText(self):
+        y_gen = 75
+        y_last = 110
+        # Updates P1 current generated instruction
+        self.gameWindow.blit(self.consolas.render(self.p1GenInstr, True, lightOrange), (1037, y_gen))
+        # Updates P1 last generated instruction
+        self.gameWindow.blit(self.consolas.render(self.p1LastInstr, True, lightOrange), (1037, y_last))
+
+        # Updates P2 current generated instruction
+        self.gameWindow.blit(self.consolas.render(self.p2GenInstr, True, lightOrange), (1037, y_gen + 165))
+        # Updates P2 last generated instruction
+        self.gameWindow.blit(self.consolas.render(self.p2LastInstr, True, lightOrange), (1037, y_last + 165))
+
+        # Updates P3 current generated instruction
+        self.gameWindow.blit(self.consolas.render(self.p3GenInstr, True, lightOrange), (1037, y_gen + 2*165))
+        # Updates P3 last generated instruction
+        self.gameWindow.blit(self.consolas.render(self.p3LastInstr, True, lightOrange), (1037, y_last + 2*165))
+
+        # Updates P4 current generated instruction
+        self.gameWindow.blit(self.consolas.render(self.p4GenInstr, True, lightOrange), (1037, y_gen + 3*165))
+        # Updates P4 last generated instruction
+        self.gameWindow.blit(self.consolas.render(self.p4LastInstr, True, lightOrange), (1037, y_last + 3*165))
+
+
     def updateBlockValue(self, procId, blockNumberGUI, newValue):
-
-        dataFont = pygame.font.SysFont('consolas', 20)
-
         if procId == 1:
-            self.p1CacheBlocksText[blockNumberGUI] = dataFont.render(str(newValue), True, black)
-            self.gameWindow.blit(self.p1CacheBlocksText[blockNumberGUI],
-                                 self.p1CacheBlocksText[blockNumberGUI].get_rect())
+            self.p1CacheValuesText[blockNumberGUI] = newValue
         elif procId == 2:
-            self.p2CacheBlocksText[blockNumberGUI] = dataFont.render(str(newValue), True, black)
-            self.gameWindow.blit(self.p2CacheBlocksText[blockNumberGUI],
-                                 self.p2CacheBlocksText[blockNumberGUI].get_rect())
+            self.p2CacheValuesText[blockNumberGUI] = newValue
         elif procId == 3:
-            self.p3CacheBlocksText[blockNumberGUI] = dataFont.render(str(newValue), True, black)
-            self.gameWindow.blit(self.p3CacheBlocksText[blockNumberGUI],
-                                 self.p3CacheBlocksText[blockNumberGUI].get_rect())
+            self.p3CacheValuesText[blockNumberGUI] = newValue
         else:
-            self.p4CacheBlocksText[blockNumberGUI] = dataFont.render(str(newValue), True, black)
-            self.gameWindow.blit(self.p4CacheBlocksText[blockNumberGUI],
-                                 self.p4CacheBlocksText[blockNumberGUI].get_rect())
+            self.p4CacheValuesText[blockNumberGUI] = newValue
+
 
     def updateBlockState(self, procId, blockNumberGUI, newState):
-        dataFont = pygame.font.SysFont('consolas', 20)
-
         if procId == 1:
-            self.p1CacheStatesText[blockNumberGUI] = dataFont.render(newState, True, black)
-            self.gameWindow.blit(self.p1CacheStatesText[blockNumberGUI],
-                                 self.p1CacheStatesText[blockNumberGUI].get_rect())
+            self.p1CacheStatesText[blockNumberGUI] = newState
         elif procId == 2:
-            self.p2CacheStatesText[blockNumberGUI] = dataFont.render(newState, True, black)
-            self.gameWindow.blit(self.p2CacheStatesText[blockNumberGUI],
-                                 self.p2CacheStatesText[blockNumberGUI].get_rect())
+            self.p2CacheStatesText[blockNumberGUI] = newState
         elif procId == 3:
-            self.p3CacheStatesText[blockNumberGUI] = dataFont.render(newState, True, black)
-            self.gameWindow.blit(self.p3CacheStatesText[blockNumberGUI],
-                                 self.p3CacheStatesText[blockNumberGUI].get_rect())
+            self.p3CacheStatesText[blockNumberGUI] = newState
         else:
-            self.p4CacheStatesText[blockNumberGUI] = dataFont.render(newState, True, black)
-            self.gameWindow.blit(self.p4CacheStatesText[blockNumberGUI],
-                                 self.p4CacheStatesText[blockNumberGUI].get_rect())
+            self.p4CacheStatesText[blockNumberGUI] = newState
 
     def updateBlockAddr(self, procId, blockNumberGUI, newAddr):
-        dataFont = pygame.font.SysFont('consolas', 20)
-
         if procId == 1:
-            self.p1CacheAddrText[blockNumberGUI] = dataFont.render(newAddr, True, black)
-            self.gameWindow.blit(self.p1CacheAddrText[blockNumberGUI],
-                                 self.p1CacheAddrText[blockNumberGUI].get_rect())
+            self.p1CacheAddrText[blockNumberGUI] = newAddr
         elif procId == 2:
-            self.p2CacheAddrText[blockNumberGUI] = dataFont.render(newAddr, True, black)
-            self.gameWindow.blit(self.p2CacheAddrText[blockNumberGUI],
-                                 self.p2CacheAddrText[blockNumberGUI].get_rect())
+            self.p1CacheAddrText[blockNumberGUI] = newAddr
         elif procId == 3:
-            self.p3CacheAddrText[blockNumberGUI] = dataFont.render(newAddr, True, black)
-            self.gameWindow.blit(self.p3CacheAddrText[blockNumberGUI],
-                                 self.p3CacheAddrText[blockNumberGUI].get_rect())
+            self.p1CacheAddrText[blockNumberGUI] = newAddr
         else:
-            self.p4CacheAddrText[blockNumberGUI] = dataFont.render(newAddr, True, black)
-            self.gameWindow.blit(self.p4CacheAddrText[blockNumberGUI],
-                                 self.p4CacheAddrText[blockNumberGUI].get_rect())
+            self.p1CacheAddrText[blockNumberGUI] = newAddr
 
 
     def updateGenInstr(self, procId, instr):
-        instrFont = pygame.font.SysFont('consolas', 20)
-
         if procId == 1:
-            self.p1GenInstr = instrFont.render(instr, True, lightOrange)
-            self.gameWindow.blit(self.p1GenInstr, self.p1GenInstr.get_rect())
+            self.p1GenInstr = instr
         elif procId == 2:
-            self.p2GenInstr = instrFont.render(instr, True, lightOrange)
-            self.gameWindow.blit(self.p2GenInstr, self.p2GenInstr.get_rect())
+            self.p2GenInstr = instr
         elif procId == 3:
-            self.p3GenInstr = instrFont.render(instr, True, lightOrange)
-            self.gameWindow.blit(self.p3GenInstr, self.p3GenInstr.get_rect())
+            self.p3GenInstr = instr
         else:
-            self.p4GenInstr = instrFont.render(instr, True, lightOrange)
-            self.gameWindow.blit(self.p4GenInstr, self.p4GenInstr.get_rect())
+            self.p4GenInstr = instr
+
 
     def updateLastInstr(self, procId, instr):
-        instrFont = pygame.font.SysFont('consolas', 20)
-
         if procId == 1:
-            self.p1LastInstr = instrFont.render(instr, True, lightOrange)
-            self.gameWindow.blit(self.p1LastInstr, self.p1LastInstr.get_rect())
+            self.p1LastInstr = instr
         elif procId == 2:
-            self.p2LastInstr = instrFont.render(instr, True, lightOrange)
-            self.gameWindow.blit(self.p2LastInstr, self.p2LastInstr.get_rect())
+            self.p2LastInstr = instr
         elif procId == 3:
-            self.p3LastInstr = instrFont.render(instr, True, lightOrange)
-            self.gameWindow.blit(self.p3LastInstr, self.p3LastInstr.get_rect())
+            self.p3LastInstr = instr
         else:
-            self.p4LastInstr = instrFont.render(instr, True, lightOrange)
-            self.gameWindow.blit(self.p4LastInstr, self.p4LastInstr.get_rect())
+            self.p4LastInstr = instr
 
+    def updateMemoryBlock(self, index, newValue):
+        self.memBlocksTexts[index] = newValue
 
-    def drawMemBlockDataText(self, memBlocks):
-        dataFont = pygame.font.SysFont('consolas', 20)
+    def drawMemBlockDataText(self):
+        x = 140
+        y = 87
 
-        x = 180
-        y = 100
-
-        for i in memBlocks:
-            memBlockValue = dataFont.render(str(i.data), True, black)
-            self.memBlocksTexts.append(memBlockValue)
-            memBlockTextRect = memBlockValue.get_rect()
-            memBlockTextRect.center = (x, y)
-            self.gameWindow.blit(memBlockValue, memBlockTextRect)
+        for i in self.memBlocksTexts:
+            self.gameWindow.blit(self.consolas.render(i, True, black), (x, y))
             y += 35
 
     def drawMainMemBlocks(self, blockNumber):
@@ -195,62 +189,47 @@ class GUI:
             y_comm += 170
 
     def drawCacheBlocks(self, blockQty):
-        dataFont = pygame.font.SysFont('consolas', 20)
 
         x = 590
         y = 30
 
         blockNumber = 0
-        cacheIndex = 1
 
         rectWidth = 200
         rectHeight = 30
 
-        for _ in range(blockQty):
-            for _ in range(blockQty):
+        for i in range(blockQty):
+            for j in range(blockQty):
 
-                cacheBlockValue = dataFont.render(hex(0), True, black)
-                cacheBlockState = dataFont.render("I", True, black)
-                cacheBlockAddr = dataFont.render("0x", True, black)
-                cacheBlockNumber = dataFont.render(str(blockNumber), True, black)
-
-                if cacheIndex == 1:
-                    self.p1CacheBlocksText.append(cacheBlockValue)
-                    self.p1CacheStatesText.append(cacheBlockState)
-                    self.p1CacheAddrText.append(cacheBlockAddr)
-                elif cacheIndex == 2:
-                    self.p2CacheBlocksText.append(cacheBlockValue)
-                    self.p2CacheStatesText.append(cacheBlockState)
-                    self.p2CacheAddrText.append(cacheBlockAddr)
-                elif cacheIndex == 3:
-                    self.p3CacheBlocksText.append(cacheBlockValue)
-                    self.p3CacheStatesText.append(cacheBlockState)
-                    self.p3CacheAddrText.append(cacheBlockAddr)
-                else:
-                    self.p4CacheBlocksText.append(cacheBlockValue)
-                    self.p4CacheStatesText.append(cacheBlockState)
-                    self.p4CacheAddrText.append(cacheBlockAddr)
-
-                cacheBlockTextRect = cacheBlockValue.get_rect()
-                cacheBlockTextRect.center = (x + 105, y + 16)
-
-                cacheBlockStateRect = cacheBlockState.get_rect()
-                cacheBlockStateRect.center = (x + 220, y + 16)
-
-                cacheBlockAddrRect = cacheBlockAddr.get_rect()
-                cacheBlockAddrRect.center = (x + 253, y + 16)
-
-                cacheBlockNumberRect = cacheBlockNumber.get_rect()
-                cacheBlockNumberRect.center = (x + 300, y + 16)
-
+                # Draws cache blocks rectangles
                 pygame.draw.rect(self.gameWindow, white, (x, y, rectWidth, rectHeight))
                 pygame.draw.rect(self.gameWindow, white, (x + 205, y, rectWidth - 170, rectHeight))
                 pygame.draw.rect(self.gameWindow, white, (x + 240, y, rectWidth - 160, rectHeight))
                 pygame.draw.rect(self.gameWindow, white, (x + 285, y, rectWidth - 170, rectHeight))
-                self.gameWindow.blit(cacheBlockValue, cacheBlockTextRect)
-                self.gameWindow.blit(cacheBlockState, cacheBlockStateRect)
-                self.gameWindow.blit(cacheBlockAddr, cacheBlockAddrRect)
-                self.gameWindow.blit(cacheBlockNumber, cacheBlockNumberRect)
+
+                # Draws cache for processor 1
+                if i == 0:
+                    self.gameWindow.blit(self.consolas.render(self.p1CacheValuesText[j], True, black), (x + 80, y + 7))
+                    self.gameWindow.blit(self.consolas.render(self.p1CacheStatesText[j], True, black), (x + 215, y + 7))
+                    self.gameWindow.blit(self.consolas.render(self.p1CacheAddrText[j], True, black), (x + 244, y + 7))
+                # Draws cache for processor 2
+                elif i == 1:
+                    self.gameWindow.blit(self.consolas.render(self.p2CacheValuesText[j], True, black), (x + 80, y + 7))
+                    self.gameWindow.blit(self.consolas.render(self.p2CacheStatesText[j], True, black), (x + 215, y + 7))
+                    self.gameWindow.blit(self.consolas.render(self.p2CacheAddrText[j], True, black), (x + 244, y + 7))
+                # Draws cache for processor 3
+                elif i == 2:
+                    self.gameWindow.blit(self.consolas.render(self.p3CacheValuesText[j], True, black), (x + 80, y + 7))
+                    self.gameWindow.blit(self.consolas.render(self.p3CacheStatesText[j], True, black), (x + 215, y + 7))
+                    self.gameWindow.blit(self.consolas.render(self.p3CacheAddrText[j], True, black), (x + 244, y + 7))
+                # Draws cache for processor 4
+                else:
+                    self.gameWindow.blit(self.consolas.render(self.p4CacheValuesText[j], True, black), (x + 80, y + 7))
+                    self.gameWindow.blit(self.consolas.render(self.p4CacheStatesText[j], True, black), (x + 215, y + 7))
+                    self.gameWindow.blit(self.consolas.render(self.p4CacheAddrText[j], True, black), (x + 244, y + 7))
+
+                self.gameWindow.blit(self.consolas.render(str(blockNumber), True, black), (x + 293, y + 7))
+
 
                 if blockNumber == 0:
                     blockNumber = 1
@@ -259,89 +238,37 @@ class GUI:
 
                 y += 35
             y += 25
-            cacheIndex += 1
 
-    def drawInstrText(self):
 
-        instrFont = pygame.font.SysFont('consolas', 20)
+    def drawStaticText(self):
 
-        x = 1037
-        y = 80
+        # Main Memory title
+        self.gameWindow.blit(self.customFont.render('Main Memory', True, red), (110, 40))
 
-        for i in range(4):
-            genInstr = instrFont.render('No instruction', True, lightOrange)
-            lastInstr = instrFont.render('No instruction', True, lightOrange)
-
-            if i == 0:
-                self.p1GenInstr = genInstr
-                self.p1LastInstr = lastInstr
-            elif i == 1:
-                self.p2GenInstr = genInstr
-                self.p2LastInstr = lastInstr
-            elif i == 2:
-                self.p3GenInstr = genInstr
-                self.p3LastInstr = lastInstr
-            else:
-                self.p4GenInstr = genInstr
-                self.p4LastInstr = lastInstr
-
-            genInstrRect = genInstr.get_rect()
-            genInstrRect.midleft = (x, y)
-
-            lastInstrRect = lastInstr.get_rect()
-            lastInstrRect.midleft = (x, y + 40)
-
-            self.gameWindow.blit(genInstr, genInstrRect)
-            self.gameWindow.blit(lastInstr, lastInstrRect)
-
-            y += 165
-
-    def drawStaticText(self, memBlocks):
-        font = pygame.font.Font('C:\\Users\\DELL\\Desktop\\Proyecto1-Arqui\\gui\\fonts\\BebasNeue.ttf', 32)
-        addrFont = pygame.font.SysFont('consolas', 20)
-
-        mainMemText = font.render('Main Memory', True, red)
-        mainMemTextRect = mainMemText.get_rect()
-        mainMemTextRect.center = (180, 50)
-
-        busText = font.render('Bus', True, white)
+        # Bus Text
+        busText = self.customFont.render('Bus', True, white)
         busText = pygame.transform.rotate(busText, 90)
-        busTextRect = busText.get_rect()
-        busTextRect.center = (420, 340)
+        self.gameWindow.blit(busText, (405, 340))
 
-        self.gameWindow.blit(busText, busTextRect)
-        self.gameWindow.blit(mainMemText, mainMemTextRect)
+        y_addr = 87
 
-        y_addr = 97
-
-        for block in memBlocks:
-            addrText = addrFont.render(hex(int(block.addr, 2)), True, white)
-            addrTextRect = addrText.get_rect()
-            addrTextRect.center = (45, y_addr)
-            self.gameWindow.blit(addrText, addrTextRect)
+        # Draws main memory addresses
+        for block in range(16):
+            self.gameWindow.blit(self.consolas.render(bin(block), True, white), (10, y_addr))
             y_addr += 35
 
-        y_proc = 45
+
+        y_proc = 30
+        proccessor = "P"
+
         for i in range(1, 5):
-            proccessor = "P"
-            procText = font.render(proccessor + str(i), True, lightOrange)
-            procTextRect = procText.get_rect()
-            procTextRect.center = (930, y_proc)
+            # Processor number
+            self.gameWindow.blit(self.customFont.render(proccessor + str(i), True, lightOrange), (915, y_proc))
 
-            lastInstr = font.render("Last Instr:", True, white)
-            lastInstrRect = procText.get_rect()
-            lastInstrRect.center = (930, y_proc + 35)
+            # Last instruction title
+            self.gameWindow.blit(self.customFont.render("Last Instr:", True, white), (915, y_proc + 70))
 
-            genInstr = font.render("Gen Instr:", True, white)
-            genInstrRect = procText.get_rect()
-            genInstrRect.center = (930, y_proc + 70)
-
-
-            self.gameWindow.blit(procText, procTextRect)
-            self.gameWindow.blit(lastInstr, lastInstrRect)
-            self.gameWindow.blit(genInstr, genInstrRect)
+            # Gen instr title
+            self.gameWindow.blit(self.customFont.render("Gen Instr:", True, white), (915, y_proc + 35))
 
             y_proc += 165
-
-
-

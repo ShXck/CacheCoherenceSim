@@ -11,8 +11,15 @@ class L1Cache:
 
         self.sets = []
 
+        guiNum = 0
+
         for _ in range(self.controller.setsQty):
             self.sets.append(CacheSet(int(blockQty / self.controller.setsQty)))
+
+        for set in self.sets:
+            for block in set.blocks:
+                block.setGUInumber(guiNum)
+                guiNum += 1
 
     def readValue(self, memAddr):
         '''
@@ -34,7 +41,7 @@ class L1Cache:
         else:
             return False
 
-    def updateBlock(self, trans, transResp, bus):
+    def updateBlock(self, trans, transResp, bus, gui):
         '''
         Updates all the information of a block.
         :param transResp: transaction response.
@@ -45,12 +52,14 @@ class L1Cache:
         setIndex = self.controller.mapAddress(transResp.addr)
 
         if not inCache:
+            # TODO: there is a bug where this returns a null value
             blockCache = self.sets[setIndex].getReplacementBlock()
 
             # if the block being replaced contains valid data, update the block to memory
             if blockCache.state.value == BlockStates.MODIFIED.value or blockCache.state.value == BlockStates.OWNED.value:
                 print("Writing back to memory")
                 bus.writeToMemory(blockCache.currentTag, blockCache.data)
+                gui.updateMemoryBlock(int(blockCache.currentTag, 2), blockCache.data)
 
         # Update block's data
         blockCache.data = transResp.data
@@ -59,15 +68,21 @@ class L1Cache:
         # Set the other block as the least recently used.
         self.sets[setIndex].blocks[not blockCache.blockNumber].LRU = 1
 
+        gui.updateBlockAddr(trans.sender, blockCache.guiNum, blockCache.currentTag)
+        gui.updateBlockValue(trans.sender, blockCache.guiNum, blockCache.data)
+
         if trans.transType.value == TransactionType.READ_MISS.value:
             if transResp.fromMemory:
+                gui.updateBlockState(trans.sender, blockCache.guiNum, "E")
                 blockCache.state = BlockStates.EXCLUSIVE
             else:
+                gui.updateBlockState(trans.sender, blockCache.guiNum, "S")
                 blockCache.state = BlockStates.SHARED
 
         elif trans.transType.value == TransactionType.WRITE_MISS.value:
             blockCache.data = trans.writeValue
             blockCache.state = BlockStates.MODIFIED
+            gui.updateBlockState(trans.sender, blockCache.guiNum, "M")
 
     def writeValue(self, memAddr, writeVal):
         '''

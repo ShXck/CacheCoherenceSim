@@ -9,7 +9,10 @@ class CacheBlock:
         self.LRU = 1
         self.blockNumber = number
         self.state = BlockStates.INVALID
-        self.dirty = False
+        self.guiNum = None
+
+    def setGUInumber(self, guiNumber):
+        self.guiNum = guiNumber
 
     def changeStateByTransaction(self, transType, fromMem):
 

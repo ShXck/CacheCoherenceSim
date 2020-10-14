@@ -9,7 +9,7 @@ import time
 
 class Processor:
 
-    def __init__(self, id, mainAddresses, lock):
+    def __init__(self, id, mainAddresses, lock, gui):
         self.id = id
         self.l1Cache = L1Cache(4, 4, 2, 2)
         self.instrGen = InstructionGenerator(mainAddresses)
@@ -18,6 +18,8 @@ class Processor:
 
         self.lastInstr = None
         self.currentInstr = None
+
+        self.gui = gui
 
     def startProcessor(self, bus):
         while True:
@@ -29,7 +31,7 @@ class Processor:
                 print("\n--------------------->P" + str(self.id) + " issued instruction: " + currentInstr)
                 self.handleInstruction(currentInstr, bus)
                 self.currentInstr = currentInstr
-
+                self.gui.updateGenInstr(self.id, currentInstr)
 
             time.sleep(2)
 
@@ -69,8 +71,6 @@ class Processor:
         # Updates the bus current working transaction
         self.lock.acquire()
         bus.updateWorkingTransaction()
-        if bus.workingTransaction is not None:
-            print("\nP" + str(self.id) + " sees " + str(bus.workingTransaction[0]) + " as working transaction")
         self.lock.release()
 
         if bus.workingTransaction is not None:
@@ -80,7 +80,7 @@ class Processor:
                 # Process transaction result
                 if trans.sender == self.id and resp.state.value == TransactionState.RESOLVED.value:
                     # Update block that caused a READ MISS
-                    self.l1Cache.updateBlock(trans, resp, bus)
+                    self.l1Cache.updateBlock(trans, resp, bus, self.gui)
                     '''
                     print("-----------------------------------------------")
                     print("\nReading value from transaction " + str(trans) + " [P" + str(self.id) + "]")
@@ -146,7 +146,7 @@ class Processor:
             # Case of write miss
             elif trans.transType.value == TransactionType.WRITE_MISS.value:
                 if trans.sender == self.id and resp.state.value == TransactionState.RESOLVED.value:
-                    self.l1Cache.updateBlock(trans, resp, bus)
+                    self.l1Cache.updateBlock(trans, resp, bus, self.gui)
                     '''
                     print("-----------------------------------------------")
                     print("\nReading value from transaction " + str(trans) + " [P" + str(self.id) + "]")
