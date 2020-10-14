@@ -1,3 +1,5 @@
+from random import randint
+
 from cache import CacheBlock as block
 
 
@@ -31,6 +33,8 @@ class CacheSet:
         for block in self.blocks:
             if block.LRU == 1:
                 return block
+
+        return self.blocks[randint(0, 1)]
 
 
 

@@ -38,14 +38,14 @@ class GUI:
         self.p3CacheAddrText = ["0x", "0x", "0x", "0x"]
         self.p4CacheAddrText = ["0x", "0x", "0x", "0x"]
 
-        self.p1LastInstr = "Test"
-        self.p1GenInstr = "Test"
-        self.p2LastInstr = "Test"
-        self.p2GenInstr = "Test"
-        self.p3LastInstr = "Test"
-        self.p3GenInstr = "Test"
-        self.p4LastInstr = "Test"
-        self.p4GenInstr = "Test"
+        self.p1LastInstr = "-"
+        self.p1GenInstr = "-"
+        self.p2LastInstr = "-"
+        self.p2GenInstr = "-"
+        self.p3LastInstr = "-"
+        self.p3GenInstr = "-"
+        self.p4LastInstr = "-"
+        self.p4GenInstr = "-"
 
         self.consolas = pygame.font.SysFont('consolas', 20)
         self.customFont = pygame.font.Font('C:\\Users\\DELL\\Desktop\\Proyecto1-Arqui\\gui\\fonts\\BebasNeue.ttf', 32)
@@ -79,24 +79,24 @@ class GUI:
         y_gen = 75
         y_last = 110
         # Updates P1 current generated instruction
-        self.gameWindow.blit(self.consolas.render(self.p1GenInstr, True, lightOrange), (1037, y_gen))
+        self.gameWindow.blit(self.consolas.render(self.p1GenInstr, True, lightOrange), (1047, y_gen))
         # Updates P1 last generated instruction
-        self.gameWindow.blit(self.consolas.render(self.p1LastInstr, True, lightOrange), (1037, y_last))
+        self.gameWindow.blit(self.consolas.render(self.p1LastInstr, True, lightOrange), (1047, y_last))
 
         # Updates P2 current generated instruction
-        self.gameWindow.blit(self.consolas.render(self.p2GenInstr, True, lightOrange), (1037, y_gen + 165))
+        self.gameWindow.blit(self.consolas.render(self.p2GenInstr, True, lightOrange), (1047, y_gen + 165))
         # Updates P2 last generated instruction
-        self.gameWindow.blit(self.consolas.render(self.p2LastInstr, True, lightOrange), (1037, y_last + 165))
+        self.gameWindow.blit(self.consolas.render(self.p2LastInstr, True, lightOrange), (1047, y_last + 165))
 
         # Updates P3 current generated instruction
-        self.gameWindow.blit(self.consolas.render(self.p3GenInstr, True, lightOrange), (1037, y_gen + 2*165))
+        self.gameWindow.blit(self.consolas.render(self.p3GenInstr, True, lightOrange), (1047, y_gen + 2*165))
         # Updates P3 last generated instruction
-        self.gameWindow.blit(self.consolas.render(self.p3LastInstr, True, lightOrange), (1037, y_last + 2*165))
+        self.gameWindow.blit(self.consolas.render(self.p3LastInstr, True, lightOrange), (1047, y_last + 2*165))
 
         # Updates P4 current generated instruction
-        self.gameWindow.blit(self.consolas.render(self.p4GenInstr, True, lightOrange), (1037, y_gen + 3*165))
+        self.gameWindow.blit(self.consolas.render(self.p4GenInstr, True, lightOrange), (1047, y_gen + 3*165))
         # Updates P4 last generated instruction
-        self.gameWindow.blit(self.consolas.render(self.p4LastInstr, True, lightOrange), (1037, y_last + 3*165))
+        self.gameWindow.blit(self.consolas.render(self.p4LastInstr, True, lightOrange), (1047, y_last + 3*165))
 
 
     def updateBlockValue(self, procId, blockNumberGUI, newValue):
@@ -124,11 +124,11 @@ class GUI:
         if procId == 1:
             self.p1CacheAddrText[blockNumberGUI] = newAddr
         elif procId == 2:
-            self.p1CacheAddrText[blockNumberGUI] = newAddr
+            self.p2CacheAddrText[blockNumberGUI] = newAddr
         elif procId == 3:
-            self.p1CacheAddrText[blockNumberGUI] = newAddr
+            self.p3CacheAddrText[blockNumberGUI] = newAddr
         else:
-            self.p1CacheAddrText[blockNumberGUI] = newAddr
+            self.p4CacheAddrText[blockNumberGUI] = newAddr
 
 
     def updateGenInstr(self, procId, instr):
@@ -204,8 +204,8 @@ class GUI:
                 # Draws cache blocks rectangles
                 pygame.draw.rect(self.gameWindow, white, (x, y, rectWidth, rectHeight))
                 pygame.draw.rect(self.gameWindow, white, (x + 205, y, rectWidth - 170, rectHeight))
-                pygame.draw.rect(self.gameWindow, white, (x + 240, y, rectWidth - 160, rectHeight))
-                pygame.draw.rect(self.gameWindow, white, (x + 285, y, rectWidth - 170, rectHeight))
+                pygame.draw.rect(self.gameWindow, white, (x + 240, y, rectWidth - 150, rectHeight))
+                pygame.draw.rect(self.gameWindow, white, (x + 295, y, rectWidth - 170, rectHeight))
 
                 # Draws cache for processor 1
                 if i == 0:
@@ -228,7 +228,7 @@ class GUI:
                     self.gameWindow.blit(self.consolas.render(self.p4CacheStatesText[j], True, black), (x + 215, y + 7))
                     self.gameWindow.blit(self.consolas.render(self.p4CacheAddrText[j], True, black), (x + 244, y + 7))
 
-                self.gameWindow.blit(self.consolas.render(str(blockNumber), True, black), (x + 293, y + 7))
+                self.gameWindow.blit(self.consolas.render(str(blockNumber), True, black), (x + 303, y + 7))
 
 
                 if blockNumber == 0:
@@ -263,12 +263,12 @@ class GUI:
 
         for i in range(1, 5):
             # Processor number
-            self.gameWindow.blit(self.customFont.render(proccessor + str(i), True, lightOrange), (915, y_proc))
+            self.gameWindow.blit(self.customFont.render(proccessor + str(i), True, lightOrange), (925, y_proc))
 
             # Last instruction title
-            self.gameWindow.blit(self.customFont.render("Last Instr:", True, white), (915, y_proc + 70))
+            self.gameWindow.blit(self.customFont.render("Last Instr:", True, white), (925, y_proc + 70))
 
             # Gen instr title
-            self.gameWindow.blit(self.customFont.render("Gen Instr:", True, white), (915, y_proc + 35))
+            self.gameWindow.blit(self.customFont.render("Gen Instr:", True, white), (925, y_proc + 35))
 
             y_proc += 165

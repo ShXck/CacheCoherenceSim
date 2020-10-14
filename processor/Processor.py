@@ -33,7 +33,7 @@ class Processor:
                 self.currentInstr = currentInstr
                 self.gui.updateGenInstr(self.id, currentInstr)
 
-            time.sleep(2)
+            time.sleep(3)
 
     def handleInstruction(self, instr, bus):
         '''
@@ -63,6 +63,10 @@ class Processor:
                 self.lock.release()
                 self.waiting = True
 
+        else:
+            self.lastInstr = instr
+            self.gui.updateLastInstr(self.id, self.lastInstr)
+
     def snoop(self, bus):
         '''
         Snoops on the bus to see if there are transactions that affects the processor.
@@ -81,12 +85,6 @@ class Processor:
                 if trans.sender == self.id and resp.state.value == TransactionState.RESOLVED.value:
                     # Update block that caused a READ MISS
                     self.l1Cache.updateBlock(trans, resp, bus, self.gui)
-                    '''
-                    print("-----------------------------------------------")
-                    print("\nReading value from transaction " + str(trans) + " [P" + str(self.id) + "]")
-                    print(self.l1Cache)
-                    print("-----------------------------------------------")
-                    '''
 
                     # Transaction is complete, mark it as received and read
                     self.lock.acquire()
@@ -96,6 +94,7 @@ class Processor:
                     # Processor can keep on generating instructions
                     self.waiting = False
                     self.lastInstr = self.currentInstr
+                    self.gui.updateLastInstr(self.id, self.lastInstr)
 
                 # READ MISS was not caused on this cache, so search and see if this cache have the value requested
                 elif trans.sender != self.id and resp.state.value == TransactionState.UNRESOLVED.value:
@@ -104,7 +103,6 @@ class Processor:
                     if found and block.state.value != BlockStates.INVALID.value:
                         # mark the block as recently used.
                         self.l1Cache.changeLRUstate(block)
-                        #print("\nFound value on my cache [P" + str(self.id) + "] on the RM for " + str(trans))
 
                         self.lock.acquire()
                         # Add data to the read miss request.
@@ -113,9 +111,11 @@ class Processor:
 
                         # Update state, if it was modified change it to OWNED, if it was owned or shared leave it as it is.
                         if block.state.value == BlockStates.MODIFIED.value:
+                            self.gui.updateBlockState(self.id, block.guiNum, "O")
                             block.state = BlockStates.OWNED
                         # if it was exclusive, now it is shared
                         elif block.state.value == BlockStates.EXCLUSIVE.value:
+                            self.gui.updateBlockState(self.id, block.guiNum, "S")
                             block.state = BlockStates.SHARED
 
                     self.lock.acquire()
@@ -129,14 +129,9 @@ class Processor:
                     found, block = self.l1Cache.getCacheBlock(trans.addr)
 
                     if found:
-                        '''
-                        print("-------------------------------------------------------------")
-                        print("\nInvalidating my block [P" + str(self.id) + "]" + trans.addr + " cuz " + str(trans))
-                        print(self.l1Cache)
-                        print("-------------------------------------------------------------")
-                        '''
                         # invalidates the block
                         block.state = BlockStates.INVALID
+                        self.gui.updateBlockState(self.id, block.guiNum, "I")
                         self.l1Cache.changeLRUstate(block)
 
                     self.lock.acquire()
@@ -147,12 +142,6 @@ class Processor:
             elif trans.transType.value == TransactionType.WRITE_MISS.value:
                 if trans.sender == self.id and resp.state.value == TransactionState.RESOLVED.value:
                     self.l1Cache.updateBlock(trans, resp, bus, self.gui)
-                    '''
-                    print("-----------------------------------------------")
-                    print("\nReading value from transaction " + str(trans) + " [P" + str(self.id) + "]")
-                    print(self.l1Cache)
-                    print("-----------------------------------------------")
-                    '''
                     # Transaction is complete, mark it as received and read
                     self.lock.acquire()
                     bus.workingTransaction[1].read = True
@@ -160,10 +149,11 @@ class Processor:
                     # Processor can keep on generating instructions
                     self.waiting = False
                     self.lastInstr = self.currentInstr
+                    self.gui.updateLastInstr(self.id, self.lastInstr)
+
                 elif trans.sender != self.id and resp.state.value == TransactionState.UNRESOLVED.value:
                     found, block = self.l1Cache.getCacheBlock(trans.addr)
                     if found and block.state.value != BlockStates.INVALID.value:
-                        #print("\nFound value on my cache [P" + str(self.id) + "] on the WM for " + str(trans))
 
                         self.lock.acquire()
                         # updates transaction result data
@@ -172,6 +162,7 @@ class Processor:
 
                         # Invalidate the block since other processor is trying to write it.
                         block.state = BlockStates.INVALID
+                        self.gui.updateBlockState(self.id, block.guiNum, "I")
                         self.l1Cache.changeLRUstate(block)
 
                     self.lock.acquire()
