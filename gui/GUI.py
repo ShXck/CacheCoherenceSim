@@ -14,6 +14,8 @@ class GUI:
         pygame.init()
         pygame.font.init()
 
+        self.running = True
+
         self.gameWindow = pygame.display.set_mode((1280, 680))
         pygame.display.set_caption("Cache Coherence Simulation Software")
         self.clock = pygame.time.Clock()
@@ -71,6 +73,11 @@ class GUI:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
+
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        print("running -> ", self.running)
+                        self.running = not self.running
 
             pygame.display.update()
             self.clock.tick(30)

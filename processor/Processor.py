@@ -1,5 +1,3 @@
-from threading import Lock
-
 from bus.Transaction import BusTransaction
 from cache.Cache import L1Cache
 from processor.InstructionGenerator import InstructionGenerator
@@ -23,17 +21,19 @@ class Processor:
 
     def startProcessor(self, bus):
         while True:
-            # snoop
-            self.snoop(bus)
 
-            if not self.waiting:
-                currentInstr = self.instrGen.generateInstruction(self.id)
-                print("\n--------------------->P" + str(self.id) + " issued instruction: " + currentInstr)
-                self.handleInstruction(currentInstr, bus)
-                self.currentInstr = currentInstr
-                self.gui.updateGenInstr(self.id, currentInstr)
+            if self.gui.running:
+                # snoop
+                self.snoop(bus)
 
-            time.sleep(3)
+                if not self.waiting:
+                    currentInstr = self.instrGen.generateInstruction(self.id)
+                    print("\n--------------------->P" + str(self.id) + " issued instruction: " + currentInstr)
+                    self.handleInstruction(currentInstr, bus)
+                    self.currentInstr = currentInstr
+                    self.gui.updateGenInstr(self.id, currentInstr)
+
+                time.sleep(2)
 
     def handleInstruction(self, instr, bus):
         '''
@@ -54,7 +54,7 @@ class Processor:
                 self.lock.release()
 
         elif splitInstr[1] == Instructions.WRITE.value:
-            needTrans, transType = self.l1Cache.writeValue(splitInstr[2], splitInstr[3])
+            needTrans, transType = self.l1Cache.writeValue(splitInstr[2], splitInstr[3], self.gui, self.id, bus)
             if needTrans:
                 # Either a write miss or a invalidation transaction will be generated.
                 busTrans = BusTransaction(self.id, splitInstr[2], transType, writeVal=hex(int(splitInstr[3], 16)))
@@ -137,6 +137,18 @@ class Processor:
                     self.lock.acquire()
                     bus.updateTransaction(self.id)
                     self.lock.release()
+                else:
+                    if resp.state.value == TransactionState.RESOLVED.value:
+                        # Transaction is complete, mark it as received and read
+                        self.lock.acquire()
+                        bus.workingTransaction[1].read = True
+                        self.lock.release()
+
+                        # Processor can keep on generating instructions
+                        self.waiting = False
+                        self.lastInstr = self.currentInstr
+                        self.gui.updateLastInstr(self.id, self.lastInstr)
+
 
             # Case of write miss
             elif trans.transType.value == TransactionType.WRITE_MISS.value:
@@ -162,6 +174,7 @@ class Processor:
 
                         # Invalidate the block since other processor is trying to write it.
                         block.state = BlockStates.INVALID
+                        bus.invalidateBlock(block.currentTag, trans.sender, self.gui)
                         self.gui.updateBlockState(self.id, block.guiNum, "I")
                         self.l1Cache.changeLRUstate(block)
 

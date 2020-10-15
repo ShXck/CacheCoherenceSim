@@ -52,11 +52,11 @@ class L1Cache:
         setIndex = self.controller.mapAddress(transResp.addr)
 
         if not inCache:
-            # TODO: there is a bug where this returns a null value
             blockCache = self.sets[setIndex].getReplacementBlock()
 
             # if the block being replaced contains valid data, update the block to memory
-            if blockCache.state.value == BlockStates.MODIFIED.value or blockCache.state.value == BlockStates.OWNED.value:
+            if blockCache.state.value == BlockStates.MODIFIED.value or blockCache.state.value == BlockStates.OWNED.value \
+                    or blockCache.state.value == BlockStates.SHARED.value:
                 print("Writing back to memory")
                 bus.writeToMemory(blockCache.currentTag, blockCache.data)
                 gui.updateMemoryBlock(int(blockCache.currentTag, 2), blockCache.data)
@@ -73,18 +73,21 @@ class L1Cache:
 
         if trans.transType.value == TransactionType.READ_MISS.value:
             if transResp.fromMemory:
+                # Response came from memory, so it's exclusive
                 gui.updateBlockState(trans.sender, blockCache.guiNum, "E")
                 blockCache.state = BlockStates.EXCLUSIVE
             else:
+                # otherwise, came from another cache
                 gui.updateBlockState(trans.sender, blockCache.guiNum, "S")
                 blockCache.state = BlockStates.SHARED
 
         elif trans.transType.value == TransactionType.WRITE_MISS.value:
             blockCache.data = trans.writeValue
             blockCache.state = BlockStates.MODIFIED
+            gui.updateBlockValue(trans.sender, blockCache.guiNum, blockCache.data)
             gui.updateBlockState(trans.sender, blockCache.guiNum, "M")
 
-    def writeValue(self, memAddr, writeVal):
+    def writeValue(self, memAddr, writeVal, gui, procId, bus):
         '''
         Tries to write the value in cache.
         :param memAddr: address of main memory.
@@ -97,21 +100,29 @@ class L1Cache:
 
         if found:
             # Block containing the address was found in cache.
-            if block.state.value == BlockStates.EXCLUSIVE.value:
-                print("Writing to exclusive block at " + addr)
+            if block.state.value == BlockStates.EXCLUSIVE.value or block.state.value == BlockStates.MODIFIED.value:
+                print("Writing to exclusive/modified block at " + addr)
                 # if block is exclusive no need to invalidate the other caches, just write the value
+                gui.updateBlockValue(procId, block.guiNum, writeVal)
                 block.data = hex(int(writeVal, 16))
                 block.state = BlockStates.MODIFIED
+                gui.updateBlockState(procId, block.guiNum, "M")
+                # The block is now dirty.
                 block.dirty = True
                 return False, TransactionType.NO_TRANS
+
             # Checks if the block is shared. If so, invalidate other caches.
             elif block.state.value == BlockStates.SHARED.value or block.state.value == BlockStates.OWNED.value:
                 print("Invalidate other caches at " + addr)
+                gui.updateBlockValue(procId, block.guiNum, writeVal)
                 # Generate transaction to invalidate other caches
                 block.data = hex(int(writeVal, 16))
+                gui.updateBlockState(procId, block.guiNum, "M")
                 block.state = BlockStates.MODIFIED
+                #TODO: Change was made here
                 return True, TransactionType.INVALIDATE
-            else:
+
+            elif block.state.value == BlockStates.INVALID.value:
                 # block was found but it has and invalid data.
                 return True, TransactionType.WRITE_MISS
         else:

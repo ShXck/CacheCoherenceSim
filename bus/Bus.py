@@ -1,5 +1,5 @@
 from bus.TransactionResponse import TransactionResponse
-from cache.Enums import TransactionState, TransactionType
+from cache.Enums import TransactionState, TransactionType, BlockStates
 
 
 class Bus:
@@ -27,13 +27,23 @@ class Bus:
                 # since there was no other transactions, value goes back to None
                 self.workingTransaction = None
 
-
     def addTransaction(self, transaction):
         '''
         Sets the current transaction of the bus.
         :param transaction: transaction to be processed.
         '''
         self.transactions.append((transaction, TransactionResponse(transaction.addr)))
+
+
+    def invalidateBlock(self, addr, transOwner, gui):
+        for processor in self.listeningProcessors:
+            if processor.id != transOwner:
+                for set in processor.l1Cache.sets:
+                    for block in set.blocks:
+                        if block.currentTag == addr:
+                            block.state = BlockStates.INVALID
+                            gui.updateBlockState(processor.id, block.guiNum, "I")
+
 
 
     def updateTransaction(self, procId):
@@ -58,13 +68,8 @@ class Bus:
             if len(trans.accessed) == maxAccesses and resp.state.value == TransactionState.UNRESOLVED.value:
                 # all caches have invalidated their blocks if it was needed
                 self.workingTransaction[1].state = TransactionState.RESOLVED
-                self.workingTransaction[1].read = True
+                #self.workingTransaction[1].read = True
 
-    '''
-    def updateTransactions(self):
-        maxAcceses = len(self.listeningProcessors) - 1
-        self.transactions = [(trans, resp) for trans, resp in self.transactions if (not resp.read and len(trans.accessed) < maxAcceses)]
-    '''
 
     def writeToMemory(self, addr, value):
         '''

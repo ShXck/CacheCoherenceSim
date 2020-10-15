@@ -25,3 +25,4 @@ class TransactionType(enum.Enum):
     READ_MISS = 1
     INVALIDATE = 2
     WRITE_MISS = 3
+    WRITE_HIT_INV = 4
