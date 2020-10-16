@@ -19,19 +19,28 @@ class Processor:
 
         self.gui = gui
 
+        self.strId = "P" + str(id)
+
     def startProcessor(self, bus):
         while True:
 
-            if self.gui.running:
+            if self.gui.running and self.gui.start:
                 # snoop
                 self.snoop(bus)
 
                 if not self.waiting:
-                    currentInstr = self.instrGen.generateInstruction(self.id)
-                    print("\n--------------------->P" + str(self.id) + " issued instruction: " + currentInstr)
+                    if self.gui.instructionText.split(" ")[0] == self.strId:
+                        currentInstr = self.gui.instructionText
+                        print(str(self.id) + " read instr from input: " + currentInstr)
+                        self.gui.instructionText = ""
+                    else:
+                        currentInstr = self.instrGen.generateInstruction(self.id)
+                        print(str(self.id) + " issued instruction: " + currentInstr)
+
                     self.handleInstruction(currentInstr, bus)
                     self.currentInstr = currentInstr
                     self.gui.updateGenInstr(self.id, currentInstr)
+
 
                 time.sleep(2)
 

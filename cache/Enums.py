@@ -26,3 +26,10 @@ class TransactionType(enum.Enum):
     INVALIDATE = 2
     WRITE_MISS = 3
     WRITE_HIT_INV = 4
+
+
+class RunMode(enum.Enum):
+    UNDEFINED = 0
+    CONTINUOUS = 1
+    STEP = 2
+    CYCLES = 3

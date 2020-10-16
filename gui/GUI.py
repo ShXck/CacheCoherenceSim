@@ -1,11 +1,16 @@
 import sys
 import pygame
 
+from cache.Enums import RunMode
+from gui.Button import Button
+from gui.ModeDefinition import ModeInfo
+
 blue = (0, 0, 255)
 white = (255, 255, 255)
 red = (255, 0, 0)
 lightOrange = (229, 126, 57)
 black = (0, 0, 0)
+YELLOW = (255, 206, 70)
 
 
 class GUI:
@@ -19,6 +24,11 @@ class GUI:
         self.gameWindow = pygame.display.set_mode((1280, 680))
         pygame.display.set_caption("Cache Coherence Simulation Software")
         self.clock = pygame.time.Clock()
+
+        self.btn1 = Button('Ejecución Continua', 300, 200, 700, 50)
+        self.btn2 = Button('Paso a Paso', 300, 300, 700, 50)
+        self.btn3 = Button('Por número de ciclos', 300, 400, 700, 50)
+        self.btn4 = Button('Insertar Instrucción', 450, 400, 400, 50)
 
         # Strings of the values in main memory
         self.memBlocksTexts = []
@@ -50,7 +60,17 @@ class GUI:
         self.p4GenInstr = "-"
 
         self.consolas = pygame.font.SysFont('consolas', 20)
+        self.consolasInstr = pygame.font.SysFont('consolas', 30)
+        self.consolasTitle = pygame.font.SysFont('consolas', 44)
         self.customFont = pygame.font.Font('C:\\Users\\DELL\\Desktop\\Proyecto1-Arqui\\gui\\fonts\\BebasNeue.ttf', 32)
+        self.pausedFont = pygame.font.Font('C:\\Users\\DELL\\Desktop\\Proyecto1-Arqui\\gui\\fonts\\BebasNeue.ttf', 130)
+
+        self.mode = ModeInfo()
+
+        self.instructionText = ""
+        self.cyclestext = ""
+
+        self.start = False
 
     def setMemInitialValues(self, memblocks):
         for i in memblocks:
@@ -60,27 +80,159 @@ class GUI:
     def startGUI(self):
 
         while True:
+
             self.gameWindow.fill(black)
 
-            self.drawMainMemBlocks(16)
-            self.drawBusComms()
-            self.drawStaticText()
-            self.drawCacheBlocks(4)
-            self.drawMemBlockDataText()
-            self.drawLastInstrText()
+            if self.start and self.running:
+                self.drawMainMemBlocks(16)
+                self.drawBusComms()
+                self.drawStaticText()
+                self.drawCacheBlocks(4)
+                self.drawMemBlockDataText()
+                self.drawLastInstrText()
+
+            elif not self.running:
+                self.gameWindow.blit(self.pausedFont.render("PAUSED", True, YELLOW), (500, 100))
+                self.gameWindow.blit(self.consolasTitle.render("Ingrese una instrucción: ", True, white), (370, 270))
+                self.gameWindow.blit(self.consolasInstr.render(self.instructionText, True, YELLOW), (480, 340))
+
 
             for event in pygame.event.get():
+                if not self.start:
+                    self.btn1.handle_event(event)
+                    self.btn2.handle_event(event)
+                    self.btn3.handle_event(event)
+                elif not self.running:
+                    self.btn4.handle_event(event)
+
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
 
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_SPACE:
-                        print("running -> ", self.running)
+                    if event.key == pygame.K_ESCAPE:
                         self.running = not self.running
+                    elif event.key == pygame.K_RETURN and self.btn3.clicked:
+                        if len(self.cyclestext) > 0:
+                            self.start = True
+                            self.mode.cycles = str(self.cyclestext)
+
+                    self.handleNumericKeyboard(event)
+                    self.handleNormalKeyboard(event)
+
+            if not self.start:
+                self.btn1.update()
+                self.btn2.update()
+                self.btn3.update()
+
+                self.btn1.draw(self.gameWindow)
+                self.btn2.draw(self.gameWindow)
+                self.btn3.draw(self.gameWindow)
+
+                self.gameWindow.blit(self.consolasTitle.render("Seleccione modo de operación", True, lightOrange), (310, 100))
+
+                if self.btn1.clicked:
+                    self.start = True
+                    self.mode.mode = RunMode.CONTINUOUS
+                elif self.btn2.clicked:
+                    self.mode.mode = RunMode.STEP
+                    self.start = True
+                elif self.btn3.clicked:
+                    self.gameWindow.blit(self.consolasTitle.render("Ingrese el número de ciclos: ", True, lightOrange),
+                                         (300, 470))
+
+                    self.gameWindow.blit(self.consolasTitle.render(self.cyclestext, True, white),
+                                         (970, 470))
+
+                    self.mode.mode = RunMode.CYCLES
+
+            elif not self.running:
+                self.btn4.update()
+                self.btn4.draw(self.gameWindow)
+
+                if self.btn4.clicked:
+                    self.running = True
+                    self.btn4.clicked = False
 
             pygame.display.update()
+
             self.clock.tick(30)
+
+    def handleNumericKeyboard(self, event):
+        if not self.start:
+            if event.key == pygame.K_0:
+                self.cyclestext += str(0)
+            elif event.key == pygame.K_1:
+                self.cyclestext += str(1)
+            elif event.key == pygame.K_2:
+                self.cyclestext += str(2)
+            elif event.key == pygame.K_3:
+                self.cyclestext += str(3)
+            elif event.key == pygame.K_4:
+                self.cyclestext += str(4)
+            elif event.key == pygame.K_5:
+                self.cyclestext += str(5)
+            elif event.key == pygame.K_6:
+                self.cyclestext += str(6)
+            elif event.key == pygame.K_7:
+                self.cyclestext += str(7)
+            elif event.key == pygame.K_0:
+                self.cyclestext += str(8)
+            elif event.key == pygame.K_9:
+                self.cyclestext += str(9)
+        else:
+            if event.key == pygame.K_0:
+                self.instructionText += str(0)
+            elif event.key == pygame.K_1:
+                self.instructionText += str(1)
+            elif event.key == pygame.K_2:
+                self.instructionText += str(2)
+            elif event.key == pygame.K_3:
+                self.instructionText += str(3)
+            elif event.key == pygame.K_4:
+                self.instructionText += str(4)
+            elif event.key == pygame.K_5:
+                self.instructionText += str(5)
+            elif event.key == pygame.K_6:
+                self.instructionText += str(6)
+            elif event.key == pygame.K_7:
+                self.instructionText += str(7)
+            elif event.key == pygame.K_0:
+                self.instructionText += str(8)
+            elif event.key == pygame.K_9:
+                self.instructionText += str(9)
+            elif event.key == pygame.K_BACKSPACE:
+                self.instructionText = self.instructionText[:-1]
+
+    def handleNormalKeyboard(self, event):
+        if event.key == pygame.K_p:
+            self.instructionText += "P"
+        elif event.key == pygame.K_a:
+            self.instructionText += "A"
+        elif event.key == pygame.K_b:
+            self.instructionText += "B"
+        elif event.key == pygame.K_c:
+            self.instructionText += "C"
+        elif event.key == pygame.K_d:
+            self.instructionText += "D"
+        elif event.key == pygame.K_e:
+            self.instructionText += "E"
+        elif event.key == pygame.K_f:
+            self.instructionText += "F"
+        elif event.key == pygame.K_x:
+            self.instructionText += "x"
+        elif event.key == pygame.K_w:
+            self.instructionText += "W"
+        elif event.key == pygame.K_r:
+            self.instructionText += "R"
+        elif event.key == pygame.K_i:
+            self.instructionText += "I"
+        elif event.key == pygame.K_t:
+            self.instructionText += "T"
+        elif event.key == pygame.K_l:
+            self.instructionText += "L"
+        elif event.key == pygame.K_SPACE:
+            self.instructionText += " "
 
     def drawLastInstrText(self):
         y_gen = 75
