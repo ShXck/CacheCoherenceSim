@@ -83,7 +83,7 @@ class GUI:
 
             self.gameWindow.fill(black)
 
-            if self.start and self.running:
+            if self.start:
                 self.drawMainMemBlocks(16)
                 self.drawBusComms()
                 self.drawStaticText()
@@ -91,11 +91,9 @@ class GUI:
                 self.drawMemBlockDataText()
                 self.drawLastInstrText()
 
-            elif not self.running:
-                self.gameWindow.blit(self.pausedFont.render("PAUSED", True, YELLOW), (500, 100))
-                self.gameWindow.blit(self.consolasTitle.render("Ingrese una instrucción: ", True, white), (370, 270))
-                self.gameWindow.blit(self.consolasInstr.render(self.instructionText, True, YELLOW), (480, 340))
-
+            if not self.running:
+                self.gameWindow.blit(self.consolas.render("Ingrese una instrucción: ", True, white), (30, 650))
+                self.gameWindow.blit(self.consolas.render(self.instructionText, True, YELLOW), (300, 650))
 
             for event in pygame.event.get():
                 if not self.start:
@@ -145,14 +143,6 @@ class GUI:
                                          (970, 470))
 
                     self.mode.mode = RunMode.CYCLES
-
-            elif not self.running:
-                self.btn4.update()
-                self.btn4.draw(self.gameWindow)
-
-                if self.btn4.clicked:
-                    self.running = True
-                    self.btn4.clicked = False
 
             pygame.display.update()
 
