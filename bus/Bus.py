@@ -1,5 +1,5 @@
 from bus.TransactionResponse import TransactionResponse
-from cache.Enums import TransactionState, TransactionType, BlockStates
+from cache.Enums import TransactionState, TransactionType, BlockState
 
 
 class Bus:
@@ -41,7 +41,7 @@ class Bus:
                 for set in processor.l1Cache.sets:
                     for block in set.blocks:
                         if block.currentTag == addr:
-                            block.state = BlockStates.INVALID
+                            block.state = BlockState.INVALID
                             gui.updateBlockState(processor.id, block.guiNum, "I")
 
 

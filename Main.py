@@ -9,7 +9,6 @@ mainMem = MainMemory(16)
 
 gui = GUI.GUI()
 
-#mainMem.print()
 lock = threading.Lock()
 proc1 = Processor(1, mainMem.getAvailableAddresses(), lock, gui)
 proc2 = Processor(2, mainMem.getAvailableAddresses(), lock, gui)

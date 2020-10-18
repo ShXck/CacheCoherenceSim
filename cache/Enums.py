@@ -1,7 +1,7 @@
 import enum
 
 
-class BlockStates(enum.Enum):
+class BlockState(enum.Enum):
     MODIFIED = 0
     SHARED = 1
     INVALID = 2

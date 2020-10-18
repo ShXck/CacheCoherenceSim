@@ -1,7 +1,7 @@
 from bus.Transaction import BusTransaction
 from cache.Cache import L1Cache
 from processor.InstructionGenerator import InstructionGenerator
-from cache.Enums import Instructions, BlockStates, TransactionState, TransactionType
+from cache.Enums import Instructions, BlockState, TransactionState, TransactionType
 import time
 
 
@@ -35,7 +35,7 @@ class Processor:
                         self.gui.instructionText = ""
                     else:
                         currentInstr = self.instrGen.generateInstruction(self.id)
-                        print(str(self.id) + " issued instruction: " + currentInstr)
+                        print("P" + str(self.id) + " issued instruction: " + currentInstr)
 
                     self.handleInstruction(currentInstr, bus)
                     self.currentInstr = currentInstr
@@ -109,7 +109,7 @@ class Processor:
                 elif trans.sender != self.id and resp.state.value == TransactionState.UNRESOLVED.value:
                     found, block = self.l1Cache.getCacheBlock(trans.addr)
                     # if the cache has the block and is valid
-                    if found and block.state.value != BlockStates.INVALID.value:
+                    if found and block.state.value != BlockState.INVALID.value:
                         # mark the block as recently used.
                         self.l1Cache.changeLRUstate(block)
 
@@ -119,13 +119,16 @@ class Processor:
                         self.lock.release()
 
                         # Update state, if it was modified change it to OWNED, if it was owned or shared leave it as it is.
-                        if block.state.value == BlockStates.MODIFIED.value:
+                        if block.state.value == BlockState.MODIFIED.value:
                             self.gui.updateBlockState(self.id, block.guiNum, "O")
-                            block.state = BlockStates.OWNED
+                            block.state = BlockState.OWNED
+                            # writes back to memory before sharing the data.
+                            bus.writeToMemory(block.currentTag, block.data)
+                            self.gui.updateMemoryBlock(int(block.currentTag, 2), block.data)
                         # if it was exclusive, now it is shared
-                        elif block.state.value == BlockStates.EXCLUSIVE.value:
+                        elif block.state.value == BlockState.EXCLUSIVE.value:
                             self.gui.updateBlockState(self.id, block.guiNum, "S")
-                            block.state = BlockStates.SHARED
+                            block.state = BlockState.SHARED
 
                     self.lock.acquire()
                     bus.updateTransaction(self.id)
@@ -139,7 +142,7 @@ class Processor:
 
                     if found:
                         # invalidates the block
-                        block.state = BlockStates.INVALID
+                        block.state = BlockState.INVALID
                         self.gui.updateBlockState(self.id, block.guiNum, "I")
                         self.l1Cache.changeLRUstate(block)
 
@@ -174,7 +177,7 @@ class Processor:
 
                 elif trans.sender != self.id and resp.state.value == TransactionState.UNRESOLVED.value:
                     found, block = self.l1Cache.getCacheBlock(trans.addr)
-                    if found and block.state.value != BlockStates.INVALID.value:
+                    if found and block.state.value != BlockState.INVALID.value:
 
                         self.lock.acquire()
                         # updates transaction result data
@@ -182,7 +185,7 @@ class Processor:
                         self.lock.release()
 
                         # Invalidate the block since other processor is trying to write it.
-                        block.state = BlockStates.INVALID
+                        block.state = BlockState.INVALID
                         bus.invalidateBlock(block.currentTag, trans.sender, self.gui)
                         self.gui.updateBlockState(self.id, block.guiNum, "I")
                         self.l1Cache.changeLRUstate(block)

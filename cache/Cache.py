@@ -1,7 +1,7 @@
 from bus.Transaction import BusTransaction
 from cache.CacheController import CacheController
 from cache.CacheSet import CacheSet
-from cache.Enums import BlockStates, TransactionType
+from cache.Enums import BlockState, TransactionType
 
 
 class L1Cache:
@@ -31,7 +31,7 @@ class L1Cache:
 
         found, block = self.getCacheBlock(tag)
 
-        if found and block.state.value != BlockStates.INVALID.value:
+        if found and block.state.value != BlockState.INVALID.value:
             print("Block is valid -> Data: ", block.data)
             # Marks the block read as recently used.
             block.LRU = 0
@@ -55,8 +55,9 @@ class L1Cache:
             blockCache = self.sets[setIndex].getReplacementBlock()
 
             # if the block being replaced contains valid data, update the block to memory
-            if blockCache.state.value == BlockStates.MODIFIED.value or blockCache.state.value == BlockStates.OWNED.value \
-                    or blockCache.state.value == BlockStates.SHARED.value:
+            #if blockCache.state.value == BlockState.MODIFIED.value or blockCache.state.value == BlockState.OWNED.value \
+            #        or blockCache.state.value == BlockState.SHARED.value:
+            if blockCache.state.value == BlockState.MODIFIED.value:
                 print("Writing back to memory")
                 bus.writeToMemory(blockCache.currentTag, blockCache.data)
                 gui.updateMemoryBlock(int(blockCache.currentTag, 2), blockCache.data)
@@ -75,15 +76,15 @@ class L1Cache:
             if transResp.fromMemory:
                 # Response came from memory, so it's exclusive
                 gui.updateBlockState(trans.sender, blockCache.guiNum, "E")
-                blockCache.state = BlockStates.EXCLUSIVE
+                blockCache.state = BlockState.EXCLUSIVE
             else:
                 # otherwise, came from another cache
                 gui.updateBlockState(trans.sender, blockCache.guiNum, "S")
-                blockCache.state = BlockStates.SHARED
+                blockCache.state = BlockState.SHARED
 
         elif trans.transType.value == TransactionType.WRITE_MISS.value:
             blockCache.data = trans.writeValue
-            blockCache.state = BlockStates.MODIFIED
+            blockCache.state = BlockState.MODIFIED
             gui.updateBlockValue(trans.sender, blockCache.guiNum, blockCache.data)
             gui.updateBlockState(trans.sender, blockCache.guiNum, "M")
 
@@ -100,29 +101,28 @@ class L1Cache:
 
         if found:
             # Block containing the address was found in cache.
-            if block.state.value == BlockStates.EXCLUSIVE.value or block.state.value == BlockStates.MODIFIED.value:
-                print("Writing to exclusive/modified block at " + addr)
+            if block.state.value == BlockState.EXCLUSIVE.value or block.state.value == BlockState.MODIFIED.value:
                 # if block is exclusive no need to invalidate the other caches, just write the value
                 gui.updateBlockValue(procId, block.guiNum, writeVal)
                 block.data = hex(int(writeVal, 16))
-                block.state = BlockStates.MODIFIED
+                block.state = BlockState.MODIFIED
                 gui.updateBlockState(procId, block.guiNum, "M")
                 # The block is now dirty.
                 block.dirty = True
                 return False, TransactionType.NO_TRANS
 
             # Checks if the block is shared. If so, invalidate other caches.
-            elif block.state.value == BlockStates.SHARED.value or block.state.value == BlockStates.OWNED.value:
+            elif block.state.value == BlockState.SHARED.value or block.state.value == BlockState.OWNED.value:
                 print("Invalidate other caches at " + addr)
                 gui.updateBlockValue(procId, block.guiNum, writeVal)
                 # Generate transaction to invalidate other caches
                 block.data = hex(int(writeVal, 16))
                 gui.updateBlockState(procId, block.guiNum, "M")
-                block.state = BlockStates.MODIFIED
+                block.state = BlockState.MODIFIED
                 #TODO: Change was made here
                 return True, TransactionType.INVALIDATE
 
-            elif block.state.value == BlockStates.INVALID.value:
+            elif block.state.value == BlockState.INVALID.value:
                 # block was found but it has and invalid data.
                 return True, TransactionType.WRITE_MISS
         else:

@@ -1,4 +1,4 @@
-from cache.Enums import BlockStates, TransactionType, Instructions
+from cache.Enums import BlockState, TransactionType, Instructions
 
 
 class CacheBlock:
@@ -8,7 +8,7 @@ class CacheBlock:
         self.data = hex(0)
         self.LRU = 1
         self.blockNumber = number
-        self.state = BlockStates.INVALID
+        self.state = BlockState.INVALID
         self.guiNum = None
 
     def setGUInumber(self, guiNumber):
@@ -16,21 +16,21 @@ class CacheBlock:
 
     def changeStateByTransaction(self, transType, fromMem):
 
-        if transType.value == TransactionType.READ_MISS.value and self.state.value == BlockStates.INVALID:
+        if transType.value == TransactionType.READ_MISS.value and self.state.value == BlockState.INVALID:
             if fromMem:
-                self.state = BlockStates.EXCLUSIVE
+                self.state = BlockState.EXCLUSIVE
             else:
-                self.state = BlockStates.SHARED
+                self.state = BlockState.SHARED
 
-        elif transType.value == TransactionType.WRITE_MISS.value and self.state.value == BlockStates.INVALID:
-            self.state = BlockStates.MODIFIED
+        elif transType.value == TransactionType.WRITE_MISS.value and self.state.value == BlockState.INVALID:
+            self.state = BlockState.MODIFIED
 
 
 
     def changeStateByInstruction(self, instr):
         if instr.value == Instructions.WRITE:
-            if self.state.value == BlockStates.OWNED:
-                self.state = BlockStates.MODIFIED
+            if self.state.value == BlockState.OWNED:
+                self.state = BlockState.MODIFIED
 
 
 
