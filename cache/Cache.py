@@ -55,9 +55,7 @@ class L1Cache:
             blockCache = self.sets[setIndex].getReplacementBlock()
 
             # if the block being replaced contains valid data, update the block to memory
-            #if blockCache.state.value == BlockState.MODIFIED.value or blockCache.state.value == BlockState.OWNED.value \
-            #        or blockCache.state.value == BlockState.SHARED.value:
-            if blockCache.state.value == BlockState.MODIFIED.value:
+            if blockCache.state.value == BlockState.MODIFIED.value or blockCache.state.value == BlockState.OWNED.value:
                 print("Writing back to memory")
                 bus.writeToMemory(blockCache.currentTag, blockCache.data)
                 gui.updateMemoryBlock(int(blockCache.currentTag, 2), blockCache.data)

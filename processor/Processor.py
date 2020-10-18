@@ -123,8 +123,8 @@ class Processor:
                             self.gui.updateBlockState(self.id, block.guiNum, "O")
                             block.state = BlockState.OWNED
                             # writes back to memory before sharing the data.
-                            bus.writeToMemory(block.currentTag, block.data)
-                            self.gui.updateMemoryBlock(int(block.currentTag, 2), block.data)
+                            #bus.writeToMemory(block.currentTag, block.data)
+                            #self.gui.updateMemoryBlock(int(block.currentTag, 2), block.data)
                         # if it was exclusive, now it is shared
                         elif block.state.value == BlockState.EXCLUSIVE.value:
                             self.gui.updateBlockState(self.id, block.guiNum, "S")
